@@ -33,7 +33,7 @@ int msyncCheck(int msync_result, void* addr, int fd, off_t original_file_size, s
     return 0;
 }
 
-int munmapCheck(int munmap_result, void* addr, int fd, off_t file_size){
+int munmapCheck(int munmap_result, int fd, off_t file_size){
     if(munmap_result == -1){
         proj3::ftruncate(fd, file_size);
         proj3::close(fd);
@@ -45,10 +45,14 @@ int munmapCheck(int munmap_result, void* addr, int fd, off_t file_size){
 
 
 int create(int argc, char* argv[]){
+    if(argc < 4){
+        std::cout <<"Not enough arguments provided. Usage: create <file_path> <fill_char> <file_size>" << std::endl;
+        return 1;
+    }   
     String file_path = argv[2];
     char fill_char = argv[3][0];
     off_t file_size = std::atoi(argv[4]);
-    int fd = open(file_path, proj3::O_RDWR | proj3::O_CREAT | proj3::O_TRUNC, 0666);
+    int fd = proj3::open(file_path.c_str(), proj3::O_RDWR | proj3::O_CREAT | proj3::O_TRUNC, 0666);
     if(fd == -1){
         return 1;
     }
@@ -64,19 +68,18 @@ int create(int argc, char* argv[]){
     }
 
     char* mapRegion = static_cast<char*>(addr);
-    for(size_t i = 0; i < file_size; i++){
+    for(size_t i = 0; i < static_cast<size_t>(file_size); i++){
         mapRegion[i] = fill_char;
     }
 
-    size_t sync_size = std::atoi(argv[4]);
     int msync_result = proj3::msync(addr, length, proj3::MS_SYNC);
     
-    if(msyncCheck(msync_result, addr, fd, file_size) == 1){
+    if(msyncCheck(msync_result, addr, fd, static_cast<size_t>(file_size)) == 1){
         return 1;
     }
     
     int munmap_result = proj3::munmap(addr, length);
-    if(munmapCheck(munmap_result, addr, fd, file_size) == 1){
+    if(munmapCheck(munmap_result, fd, static_cast<off_t>(file_size)) == 1){
         return 1;
     }
     proj3::close(fd);
@@ -85,11 +88,15 @@ int create(int argc, char* argv[]){
 }
 
 int insert(int argc, char* argv[]){
+    if(argc < 5){
+        std::cout <<"Not enough arguments provided. Usage: insert <file_path> <offset> <bytes_incoming>" << std::endl;
+        return 1;
+    }
     String file_path = argv[2];
     size_t offset = std::atoi(argv[3]);
     size_t bytes_incoming = std::atoi(argv[4]);
 
-    int fd = proj3::open(file_path, proj3::O_RDWR);
+    int fd = proj3::open(file_path.c_str(), proj3::O_RDWR);
 
     if(fd == -1){
         return 1;
@@ -139,7 +146,7 @@ int insert(int argc, char* argv[]){
     }
     
     int munmap_result = proj3::munmap(addr, sync_size);
-    if(munmapCheck(munmap_result, addr, fd, new_file_size) == 1){
+    if(munmapCheck(munmap_result, fd, new_file_size) == 1){
         return 1;
     }
     proj3::close(fd);
@@ -149,15 +156,19 @@ int insert(int argc, char* argv[]){
 }
 
 int append(int argc, char* argv[]){
+    if(argc < 4){
+        std::cout <<"Not enough arguments provided. Usage: append <file_path> <bytes_incoming>" << std::endl;
+        return 1;
+    }
     String file_path = argv[2];
     size_t bytes_incoming = std::atoi(argv[3]);
 
-    int fd = proj3::open(file_path, proj3::O_RDWR);
+    int fd = proj3::open(file_path.c_str(), proj3::O_RDWR);
     if(fd == -1){
         return 1;
     }
     struct stat fStat;
-    int fStat_result = proj3::fStat(fd, &fStat);
+    int fStat_result = proj3::fstat(fd, &fStat);
     if(fStat_result == -1){
         proj3::close(fd);
         return 1;
@@ -193,7 +204,7 @@ int append(int argc, char* argv[]){
             return 1;
         }
         int munmap_result = proj3::munmap(addr, sync_size);
-        if(munmapCheck(munmap_result, addr, fd, file_size) == 1){
+        if(munmapCheck(munmap_result, fd, file_size) == 1){
             return 1;
         }
         current_file_size = 1;
@@ -230,7 +241,7 @@ int append(int argc, char* argv[]){
                 return 1;
             }
             int munmap_result = proj3::munmap(addr, sync_size);
-            if(munmapCheck(munmap_result, addr, fd, file_size) == 1){
+            if(munmapCheck(munmap_result, fd, file_size) == 1){
                 return 1;
             }
             current_file_size = max_file_size;
