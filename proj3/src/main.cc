@@ -74,7 +74,7 @@ int create(int argc, char* argv[]){
 
     int msync_result = proj3::msync(addr, length, proj3::MS_SYNC);
     
-    if(msyncCheck(msync_result, addr, fd, static_cast<size_t>(file_size)) == 1){
+    if(msyncCheck(msync_result, addr, fd, file_size, length) ==1){
         return 1;
     }
     
