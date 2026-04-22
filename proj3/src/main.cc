@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-std::string String = std::string
+using String = std::string;
 
 int ftruncateCheck(int ftruncate_result, int fd){
     if(ftruncate_result == -1){
@@ -42,24 +42,7 @@ int munmapCheck(int munmap_result, void* addr, int fd, off_t file_size){
     return 0;
 }
 
-int main(int argc, char* argv[]){
-    String command = argv[1];
-    if (command == "create"){
-        return create(argc, argv);
-    }
-    else if(command == "insert"){
-        return insert(argc, argv);
-    }
-    else if(command == "append"){
-        return append(argc, argv);
-    }
-    else{
-        std::cerr << "Invalid command. Use 'create', 'insert', or 'append'." << std::endl;
-        return 1;
-    }
-    return 0;
 
-}
 
 int create(int argc, char* argv[]){
     String file_path = argv[2];
@@ -138,14 +121,14 @@ int insert(int argc, char* argv[]){
     }
 
     for(size_t i = offset; i < offset + bytes_incoming; i++){
-        int charcter = std:cin.get();
-        if(charcter == EOF){
+        int character = std::cin.get();
+        if(character == EOF){
             proj3::munmap(addr, new_file_size);
             proj3::ftruncate(fd, static_cast<off_t>(file_size));
             proj3::close(fd);
             return 1;
         }
-        mapRegion[i] = static_cast<char>(charcter);
+        mapRegion[i] = static_cast<char>(character);
     }
 
     size_t sync_size = static_cast<size_t>(new_file_size);
@@ -232,14 +215,14 @@ int append(int argc, char* argv[]){
             }
             char* mapRegion = static_cast<char*>(addr);
             for(size_t i = current_file_size; i < max_file_size; i++){
-                int charcter = std::cin.get();
-                if(charcter == EOF){
+                int character = std::cin.get();
+                if(character == EOF){
                     proj3::munmap(addr, max_file_size);
                     proj3::ftruncate(fd, current_file_size);
                     proj3::close(fd);
                     return 1;
                 }
-                mapRegion[i] = static_cast<char>(charcter);
+                mapRegion[i] = static_cast<char>(character);
             }
             size_t sync_size = max_file_size;
             int msync_result = proj3::msync(addr, sync_size, proj3::MS_SYNC);
@@ -258,4 +241,21 @@ int append(int argc, char* argv[]){
         return 0;
     }
 
+int main(int argc, char* argv[]){
+    String command = argv[1];
+    if (command == "create"){
+        return create(argc, argv);
+    }
+    else if(command == "insert"){
+        return insert(argc, argv);
+    }
+    else if(command == "append"){
+        return append(argc, argv);
+    }
+    else{
+        std::cerr << "Invalid command. Use 'create', 'insert', or 'append'." << std::endl;
+        return 1;
+    }
+    return 0;
 
+}
