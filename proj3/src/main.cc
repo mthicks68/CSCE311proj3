@@ -3,9 +3,44 @@
 #include <iostream>
 #include <string>
 
-std::string String = std::string;
+std::string String = std::string
+
+int ftruncateCheck(int ftruncate_result, int fd){
+    if(ftruncate_result == -1){
+        proj3::close(fd);
+        return 1;
+    }
+    return 0;
+}
 
 
+int mmapCheck(void* addr, int fd, off_t file_size){
+    if(addr == reinterpret_cast<void*>(-1)){
+        proj3::ftruncate(fd, file_size);
+        proj3::close(fd);
+        return 1;
+    }
+    return 0;
+}
+
+int msyncCheck(int msync_result, void* addr, int fd, off_t original_file_size, size_t sync_size){
+    if(msync_result == -1){
+        proj3::munmap(addr, sync_size);
+        proj3::ftruncate(fd, original_file_size);
+        proj3::close(fd);
+        return 1;
+    }
+    return 0;
+}
+
+int munmapCheck(int munmap_result, void* addr, int fd, off_t file_size){
+    if(munmap_result == -1){
+        proj3::ftruncate(fd, file_size);
+        proj3::close(fd);
+        return 1;
+    }
+    return 0;
+}
 
 int main(int argc, char* argv[]){
     String command = argv[1];
@@ -224,39 +259,3 @@ int append(int argc, char* argv[]){
     }
 
 
-int ftruncateCheck(int ftruncate_result, int fd){
-    if(ftruncate_result == -1){
-        proj3::close(fd);
-        return 1;
-    }
-    return 0;
-}
-
-
-int mmapCheck(void* addr, int fd, off_t file_size){
-    if(addr == reinterpret_cast<void*>(-1)){
-        proj3::ftruncate(fd, file_size);
-        proj3::close(fd);
-        return 1;
-    }
-    return 0;
-}
-
-int msyncCheck(int msync_result, void* addr, int fd, off_t original_file_size, size_t sync_size){
-    if(msync_result == -1){
-        proj3::munmap(addr, sync_size);
-        proj3::ftruncate(fd, original_file_size);
-        proj3::close(fd);
-        return 1;
-    }
-    return 0;
-}
-
-int munmapCheck(int munmap_result, void* addr, int fd, off_t file_size){
-    if(munmap_result == -1){
-        proj3::ftruncate(fd, file_size);
-        proj3::close(fd);
-        return 1;
-    }
-    return 0;
-}
